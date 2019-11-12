@@ -38,6 +38,7 @@ type Conn struct {
 	localAddr       net.Addr
 	remoteAddr      net.Addr
 	firstErr        error // only read this _after_ observing that closeSignal has been closed.
+	mux             sync.RWMutex
 }
 
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
@@ -58,6 +59,8 @@ func NewConn(raw js.Value) *Conn {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 	select {
 	case <-c.closeSignal:
 		c.readAfterErr(b)
@@ -108,6 +111,8 @@ func (c *Conn) checkOpen() error {
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	defer func() {
 		if e := recover(); e != nil {
 			err = recoveredValueToError(e)
@@ -128,6 +133,8 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.closeOnce.Do(func() {
 		c.Call("close")
 		c.signalClose(nil)
@@ -164,6 +171,8 @@ func (c *Conn) releaseHandlers() {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
+	c.mux.Rlock()
+	defer c.mux.RUnlock()
 	return c.localAddr
 }
 
@@ -181,14 +190,20 @@ func (c *Conn) RemoteAddr() net.Addr {
 // TODO: Return os.ErrNoDeadline. For now we return nil because multiplexers
 // don't handle the error correctly.
 func (c *Conn) SetDeadline(t time.Time) error {
+	c.mux.Rlock()
+	defer c.mux.RUnlock()
 	return nil
 }
 
 func (c *Conn) SetReadDeadline(t time.Time) error {
+	c.mux.Rlock()
+	defer c.mux.RUnlock()
 	return nil
 }
 
 func (c *Conn) SetWriteDeadline(t time.Time) error {
+	c.mux.Rlock()
+	defer c.mux.RUnlock()
 	return nil
 }
 
