@@ -21,8 +21,6 @@ type Conn struct {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
 	if c.reader == nil {
 		if err := c.prepNextReader(); err != nil {
 			return 0, err
@@ -83,8 +81,6 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
 	var err error
 	c.closeOnce.Do(func() {
 		err1 := c.Conn.WriteControl(
@@ -104,20 +100,14 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
 	return NewAddr(c.Conn.LocalAddr().String())
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
 	return NewAddr(c.Conn.RemoteAddr().String())
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
 	if err := c.SetReadDeadline(t); err != nil {
 		return err
 	}
@@ -126,14 +116,10 @@ func (c *Conn) SetDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetReadDeadline(t time.Time) error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
 	return c.Conn.SetReadDeadline(t)
 }
 
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
 	return c.Conn.SetWriteDeadline(t)
 }
 
