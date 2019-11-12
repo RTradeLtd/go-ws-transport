@@ -15,6 +15,7 @@ import (
 )
 
 func TestInBrowser(t *testing.T) {
+	t.Skip() // we dont care about this 
 	tpt := New(&tptu.Upgrader{
 		Secure: insecure.New("browserPeer"),
 		Muxer:  new(mplex.Transport),

@@ -1,4 +1,4 @@
-module github.com/libp2p/go-ws-transport/tools
+module github.com/RTradeLtd/go-ws-transport/tools
 
 go 1.13
 
