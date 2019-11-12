@@ -84,7 +84,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // This method is thread-safe.
 func (c *Conn) Close() error {
 	c.mux.Lock()
-	defer c.mux.RUnlock()
+	defer c.mux.Unlock()
 	var err error
 	c.closeOnce.Do(func() {
 		err1 := c.Conn.WriteControl(
