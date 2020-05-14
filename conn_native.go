@@ -18,14 +18,17 @@ type Conn struct {
 	DefaultMessageType int
 	reader             io.Reader
 	closeOnce          sync.Once
-	mux                sync.RWMutex
+	// although a bit unconventional and the usual sync.RWMutex is
+	// what would be done, the gorilla websocket transport is a bit different
+	// see https://godoc.org/github.com/gorilla/websocket#hdr-Concurrency for more information
+	writeMux, readMux sync.Mutex
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	c.mux.RLock()
+	c.readMux.Lock()
 	if c.reader == nil {
 		if err := c.prepNextReader(); err != nil {
-			c.mux.RUnlock()
+			c.readMux.Unlock()
 			return 0, err
 		}
 	}
@@ -37,18 +40,18 @@ func (c *Conn) Read(b []byte) (int, error) {
 			c.reader = nil
 
 			if n > 0 {
-				c.mux.RUnlock()
+				c.readMux.Unlock()
 				return n, nil
 			}
 
 			if err := c.prepNextReader(); err != nil {
-				c.mux.RUnlock()
+				c.readMux.Unlock()
 				return 0, err
 			}
 
 			// explicitly looping
 		default:
-			c.mux.RUnlock()
+			c.readMux.Unlock()
 			return n, err
 		}
 	}
@@ -74,12 +77,12 @@ func (c *Conn) prepNextReader() error {
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
-	c.mux.Lock()
+	c.writeMux.Lock()
 	if err := c.Conn.WriteMessage(c.DefaultMessageType, b); err != nil {
-		c.mux.Unlock()
+		c.writeMux.Unlock()
 		return 0, err
 	}
-	c.mux.Unlock()
+	c.writeMux.Unlock()
 	return len(b), nil
 }
 
@@ -121,9 +124,9 @@ func (c *Conn) SetReadDeadline(t time.Time) error {
 }
 
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	c.mux.Lock()
+	c.writeMux.Lock()
 	err := c.Conn.SetWriteDeadline(t)
-	c.mux.Unlock()
+	c.writeMux.Unlock()
 	return err
 }
 
