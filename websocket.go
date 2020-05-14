@@ -12,21 +12,24 @@ import (
 	manet "github.com/multiformats/go-multiaddr-net"
 )
 
-// WsProtocol is the multiaddr protocol definition for this transport.
-//
-// Deprecated: use `ma.ProtocolWithCode(ma.P_WS)
-var WsProtocol = ma.ProtocolWithCode(ma.P_WS)
-
-// WsFmt is multiaddr formatter for WsProtocol
-var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(WsProtocol.Code))
-
-// WsCodec is the multiaddr-net codec definition for the websocket transport
-var WsCodec = &manet.NetCodec{
-	NetAddrNetworks:  []string{"websocket"},
-	ProtocolName:     "ws",
-	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
-	ParseNetAddr:     ParseWebsocketNetAddr,
-}
+var (
+	// WsProtocol is the multiaddr protocol definition for this transport.
+	//
+	// Deprecated: use `ma.ProtocolWithCode(ma.P_WS)
+	WsProtocol = ma.ProtocolWithCode(ma.P_WS)
+	// WsFmt is multiaddr formatter for WsProtocol
+	WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
+	// WsCodec is the multiaddr-net codec definition for the websocket transport
+	WsCodec = &manet.NetCodec{
+		NetAddrNetworks:  []string{"websocket"},
+		ProtocolName:     "ws",
+		ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
+		ParseNetAddr:     ParseWebsocketNetAddr,
+	}
+	// This is _not_ WsFmt because we want the transport to stick to dialing fully
+	// resolved addresses.
+	dialMatcher = mafmt.And(mafmt.IP, mafmt.Base(ma.P_TCP), mafmt.Base(ma.P_WS))
+)
 
 func init() {
 	manet.RegisterNetCodec(WsCodec)
@@ -44,7 +47,7 @@ func New(u *tptu.Upgrader) *WebsocketTransport {
 }
 
 func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
-	return WsFmt.Matches(a)
+	return dialMatcher.Matches(a)
 }
 
 func (t *WebsocketTransport) Protocols() []int {

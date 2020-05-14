@@ -10,6 +10,7 @@ require (
 	github.com/multiformats/go-multiaddr-fmt v0.1.0
 	github.com/multiformats/go-multiaddr-net v0.1.0
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
+	go.uber.org/multierr v1.5.0
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 )
 
