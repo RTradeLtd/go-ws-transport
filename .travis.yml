@@ -8,6 +8,7 @@ env:
     - GO111MODULE=on
 
 install:
+- go get honnef.co/go/tools/cmd/staticcheck
 - go mod download
 
 before_script:
