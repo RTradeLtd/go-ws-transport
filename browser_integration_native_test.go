@@ -17,8 +17,11 @@ import (
 )
 
 var (
-	wasmBrowserTestBin     = "wasmbrowsertest"
-	wasmBrowserTestDir     = filepath.Join("tools", "bin")
+	//lint:ignore U1000 used only in browser mode
+	wasmBrowserTestBin = "wasmbrowsertest"
+	//lint:ignore U1000 used only in browser mode
+	wasmBrowserTestDir = filepath.Join("tools", "bin")
+	//lint:ignore U1000 used only in browser mode
 	wasmBrowserTestPackage = "github.com/agnivade/wasmbrowsertest"
 )
 

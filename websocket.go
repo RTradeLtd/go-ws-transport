@@ -20,6 +20,7 @@ var (
 	// WsFmt is multiaddr formatter for WsProtocol
 	WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
 	// WsCodec is the multiaddr-net codec definition for the websocket transport
+	//lint:ignore SA1019 not sure how we can do this otherwise
 	WsCodec = &manet.NetCodec{
 		NetAddrNetworks:  []string{"websocket"},
 		ProtocolName:     "ws",
